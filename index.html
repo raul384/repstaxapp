@@ -103,10 +103,123 @@
   .test-card{background:var(--surfaceL);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px;}
   .test-met{border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.05);}
   .test-close{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.04);}
+
+  /* ── MOBILE ─────────────────────────────────────────────────────────── */
+  #bottom-nav{display:none;}
+  #mobile-header{display:none;}
+
+  @media(max-width:768px){
+    html,body{overflow:hidden;height:100%;height:-webkit-fill-available;}
+    #app{flex-direction:column;height:100vh;height:-webkit-fill-available;}
+
+    /* Hide desktop sidebar */
+    #sidebar{display:none;}
+
+    /* Mobile top header */
+    #mobile-header{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:12px 16px 10px;
+      background:var(--surface);border-bottom:1px solid var(--border);
+      flex-shrink:0;
+    }
+    #mobile-header .mh-logo{font-family:'DM Serif Display',serif;font-size:18px;color:var(--text);line-height:1;}
+    #mobile-header .mh-sub{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--green);}
+    #mobile-header .mh-status{text-align:right;font-size:11px;color:var(--textM);line-height:1.4;}
+    #mobile-header .mh-status strong{color:var(--text);}
+
+    /* Main scrollable area */
+    #main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px;}
+
+    /* Bottom tab bar */
+    #bottom-nav{
+      display:flex;position:fixed;bottom:0;left:0;right:0;
+      background:var(--surface);border-top:1px solid var(--border);
+      z-index:500;padding:6px 0 max(6px,env(safe-area-inset-bottom));
+    }
+    .bnav-btn{
+      flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:3px;padding:4px 2px;background:none;border:none;cursor:pointer;
+      font-size:9px;font-weight:500;color:var(--textD);font-family:'DM Sans',sans-serif;
+      transition:color .15s;
+    }
+    .bnav-btn .bnav-icon{font-size:18px;line-height:1;}
+    .bnav-btn.active{color:var(--blueL);}
+    .bnav-btn.active .bnav-icon{filter:drop-shadow(0 0 4px rgba(59,130,246,.5));}
+
+    /* More menu overlay */
+    #more-menu{
+      display:none;position:fixed;bottom:60px;left:0;right:0;
+      background:var(--surface);border-top:1px solid var(--border);
+      z-index:499;padding:8px;
+    }
+    #more-menu.open{display:block;}
+    .more-item{
+      display:flex;align-items:center;gap:12px;padding:12px 16px;
+      border-radius:10px;width:100%;background:none;border:none;
+      font-size:14px;color:var(--textM);font-family:'DM Sans',sans-serif;
+      cursor:pointer;text-align:left;
+    }
+    .more-item.active{background:rgba(37,99,235,.12);color:var(--blueL);}
+    .more-item:hover{background:var(--surfaceL);}
+    .more-item-icon{width:22px;text-align:center;font-size:16px;}
+    #more-backdrop{display:none;position:fixed;inset:0;z-index:498;}
+    #more-backdrop.open{display:block;}
+
+    /* Page padding smaller on mobile */
+    .page{padding:16px 14px;}
+    .page-title{font-size:22px;}
+    .page-sub{font-size:12px;margin-bottom:16px;}
+
+    /* Grids stack to 1 col on mobile */
+    .g2,.g3,.g4{grid-template-columns:1fr!important;}
+
+    /* Cards tighter */
+    .card{padding:16px;}
+    .stat-card{padding:12px 14px;}
+
+    /* Timer smaller */
+    .timer-box{font-size:28px;padding:8px 16px;min-width:130px;}
+
+    /* Tables scroll horizontally */
+    .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    .tbl{min-width:520px;}
+    .tbl th,.tbl td{padding:8px 10px;}
+
+    /* Modal full-width */
+    .modal{max-width:100%;margin:0 12px;border-radius:16px;}
+    #modal-overlay{align-items:flex-end;padding-bottom:env(safe-area-inset-bottom);}
+    .modal{border-radius:20px 20px 0 0;max-width:100%;margin:0;}
+
+    /* Toast top-center on mobile */
+    #toast{left:16px;right:16px;top:16px;max-width:none;text-align:center;}
+
+    /* Callouts tighter */
+    .callout{padding:10px 12px;}
+    .callout-body{font-size:11px;}
+
+    /* Buttons full-width in forms */
+    .mobile-full{width:100%;justify-content:center;}
+
+    /* Hide less important table columns on mobile */
+    .tbl .hide-mobile{display:none;}
+  }
 </style>
 </head>
 <body>
 <div id="app">
+  <!-- Mobile top header (hidden on desktop) -->
+  <div id="mobile-header">
+    <div>
+      <div class="mh-logo">REPS <span style="color:var(--green);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;">Tax App</span></div>
+      <div style="font-size:10px;color:var(--textD);margin-top:2px;" id="mh-year"></div>
+    </div>
+    <div class="mh-status">
+      <div><strong id="mh-hrs">0.0</strong> / 750 hrs</div>
+      <div id="mh-pct" style="color:var(--textD);">0% of profession</div>
+    </div>
+  </div>
+
+  <!-- Desktop sidebar (hidden on mobile) -->
   <div id="sidebar">
     <div class="logo-area">
       <div class="logo-title">REPS</div>
@@ -133,7 +246,40 @@
       <button class="btn btn-green btn-sm" onclick="showToast('CPA scheduling available in full version','info')" style="width:100%;justify-content:center;font-size:11px;">Schedule CPA Review</button>
     </div>
   </div>
+
   <div id="main"></div>
+</div>
+
+<!-- Mobile bottom nav -->
+<div id="bottom-nav">
+  <button class="bnav-btn active" data-page="dashboard" onclick="nav('dashboard')">
+    <span class="bnav-icon">◈</span>Dashboard
+  </button>
+  <button class="bnav-btn" data-page="log" onclick="nav('log')">
+    <span class="bnav-icon">⊕</span>Log Hours
+  </button>
+  <button class="bnav-btn" data-page="entries" onclick="nav('entries')">
+    <span class="bnav-icon">≡</span>Entries
+  </button>
+  <button class="bnav-btn" data-page="properties" onclick="nav('properties')">
+    <span class="bnav-icon">⌂</span>Properties
+  </button>
+  <button class="bnav-btn" id="more-tab" onclick="toggleMore()">
+    <span class="bnav-icon">⋯</span>More
+  </button>
+</div>
+
+<!-- More menu (mobile) -->
+<div id="more-backdrop" onclick="closeMore()"></div>
+<div id="more-menu">
+  <button class="more-item" data-page="mileage" onclick="nav('mileage');closeMore()"><span class="more-item-icon">⬡</span>Mileage Log</button>
+  <button class="more-item" data-page="participants" onclick="nav('participants');closeMore()"><span class="more-item-icon">◉</span>Participants</button>
+  <button class="more-item" data-page="tests" onclick="nav('tests');closeMore()"><span class="more-item-icon">✓</span>Material Participation</button>
+  <button class="more-item" data-page="audit" onclick="nav('audit');closeMore()"><span class="more-item-icon">⚖</span>Audit Defense</button>
+  <div style="margin:8px 16px 4px;padding-top:8px;border-top:1px solid var(--border);">
+    <div style="font-size:10px;font-weight:700;color:var(--textD);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">§469(c)(7) Status</div>
+    <div style="font-size:13px;color:var(--textM);"><span id="more-hrs">0.0</span> / 750 hrs · <span id="more-pct">0%</span> of profession</div>
+  </div>
 </div>
 <div id="modal-overlay" onclick="if(event.target===this)closeModal()">
   <div class="modal" id="modal-box"></div>
@@ -222,13 +368,42 @@ function progBar(v,m,c){return `<div class="prog-track"><div class="prog-fill" s
 
 function updateSidebar(){
   const h=repsHours(),p=professionPct();
+  // Desktop
   const e1=document.getElementById('sb-hrs'),e2=document.getElementById('sb-pct');
   if(e1)e1.textContent=fmt(h); if(e2)e2.textContent=p+'%';
+  // Mobile header
+  const mh=document.getElementById('mh-hrs'),mp=document.getElementById('mh-pct');
+  if(mh)mh.textContent=fmt(h);
+  if(mp)mp.textContent=p+'% of profession';
+  // More menu
+  const mo=document.getElementById('more-hrs'),mop=document.getElementById('more-pct');
+  if(mo)mo.textContent=fmt(h); if(mop)mop.textContent=p+'%';
+}
+
+function toggleMore(){
+  document.getElementById('more-menu').classList.toggle('open');
+  document.getElementById('more-backdrop').classList.toggle('open');
+}
+function closeMore(){
+  document.getElementById('more-menu').classList.remove('open');
+  document.getElementById('more-backdrop').classList.remove('open');
 }
 
 function nav(page){
   S.page=page;
+  // Desktop sidebar
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
+  // Mobile bottom nav
+  const morePages=['mileage','participants','tests','audit'];
+  document.querySelectorAll('.bnav-btn').forEach(b=>{
+    b.classList.remove('active');
+    if(b.dataset.page===page) b.classList.add('active');
+  });
+  if(morePages.includes(page)){
+    document.getElementById('more-tab').classList.add('active');
+  }
+  // More menu items
+  document.querySelectorAll('.more-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
   render();
 }
 function render(){
@@ -500,8 +675,10 @@ function renderMileage(){
       <div style="display:flex;gap:10px;justify-content:flex-end;"><button class="btn btn-amber" onclick="addMileage()">+ Add Trip</button></div>
     </div>
     <div class="card" style="padding:0;overflow:hidden;">
-      <table class="tbl"><thead><tr><th>Date</th><th>From</th><th>Property</th><th>Purpose</th><th>Miles</th><th>Value</th><th></th></tr></thead>
+      <div class="tbl-wrap">
+      <table class="tbl"><thead><tr><th>Date</th><th>From</th><th class="hide-mobile">Property</th><th>Purpose</th><th>Miles</th><th>Value</th><th></th></tr></thead>
       <tbody>${rows||`<tr><td colspan="7" style="text-align:center;padding:36px;color:var(--textD);">No mileage logged yet</td></tr>`}</tbody></table>
+      </div>
     </div>
   </div>`;
 }
@@ -535,8 +712,10 @@ function renderEntries(){
       <button class="btn btn-sm" onclick="exportCSV()">↓ Export for CPA</button>
     </div>
     <div class="card" style="padding:0;overflow:hidden;">
-      <table class="tbl"><thead><tr><th>Date</th><th>Hrs</th><th>Activity Type</th><th>Description</th><th>Property</th><th>Participant</th><th title="Reg §1.469-5T(f)(4) Timestamp">TS</th><th></th></tr></thead>
+      <div class="tbl-wrap">
+      <table class="tbl"><thead><tr><th>Date</th><th>Hrs</th><th>Activity Type</th><th>Description</th><th class="hide-mobile">Property</th><th class="hide-mobile">Participant</th><th title="Reg §1.469-5T(f)(4) Timestamp">TS</th><th></th></tr></thead>
       <tbody>${rows||`<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--textD);">No entries yet — go to Log Hours</td></tr>`}</tbody></table>
+      </div>
     </div>
   </div>`;
 }
@@ -893,6 +1072,7 @@ function renderAudit(){
 
 // ── BOOT ─────────────────────────────────────────────────────────────────────
 document.getElementById('tax-year').textContent=YEAR+' Tax Year';
+const mhy=document.getElementById('mh-year');if(mhy)mhy.textContent=YEAR+' Tax Year';
 render();
 </script>
 </body>
