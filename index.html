@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>REPS Tax App</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0d1117;--surface:#161c26;--surfaceL:#1d2535;--surfaceXL:#222e42;
+  --border:#242e42;--borderL:#2d3a4f;
+  --blue:#2563eb;--blueL:#3b82f6;--teal:#0d9488;--tealL:#14b8a6;
+  --green:#10b981;--greenL:#34d399;--amber:#f59e0b;--amberL:#fbbf24;
+  --red:#ef4444;--purple:#a855f7;
+  --text:#f0f4f8;--textM:#94a3b8;--textD:#64748b;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  --nav-h:62px;
+}
+html{height:100%;background:var(--bg);}
+body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased;}
+*{scrollbar-width:thin;scrollbar-color:#2d3a4f #161c26;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#2d3a4f;border-radius:3px;}
+
+/* ── APP SHELL ── */
+#app{display:flex;flex-direction:column;height:100dvh;height:100vh;}
+#topbar{flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px 10px;padding-top:calc(12px + env(safe-area-inset-top,0px));display:flex;align-items:center;justify-content:space-between;}
+#main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 8px);}
+#bottomnav{flex-shrink:0;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:var(--safe-bottom);}
+
+/* ── TOP BAR ── */
+.tb-logo{font-family:'DM Serif Display',serif;font-size:20px;color:var(--text);line-height:1;}
+.tb-sub{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--green);}
+.tb-status{text-align:right;}
+.tb-hrs{font-size:15px;font-weight:700;color:var(--text);}
+.tb-pct{font-size:11px;color:var(--textM);}
+
+/* ── BOTTOM NAV ── */
+.bnav{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 4px 6px;background:none;border:none;cursor:pointer;font-size:10px;font-weight:500;color:var(--textD);font-family:'DM Sans',sans-serif;min-height:var(--nav-h);}
+.bnav svg{width:22px;height:22px;stroke-width:1.8;}
+.bnav.active{color:var(--blueL);}
+.bnav.active svg{stroke:var(--blueL);}
+.bnav svg{stroke:currentColor;fill:none;}
+
+/* ── MORE SHEET ── */
+#moresheet{position:fixed;inset:0;z-index:200;display:none;}
+#moresheet.open{display:block;}
+#more-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55);}
+#more-panel{position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-radius:20px 20px 0 0;padding:8px 0 calc(var(--nav-h) + var(--safe-bottom));border-top:1px solid var(--border);}
+#more-handle{width:36px;height:4px;background:var(--borderL);border-radius:2px;margin:8px auto 12px;}
+.more-row{display:flex;align-items:center;gap:14px;padding:14px 20px;border:none;background:none;width:100%;text-align:left;font-size:15px;color:var(--textM);font-family:'DM Sans',sans-serif;cursor:pointer;}
+.more-row svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0;}
+.more-row.active{color:var(--blueL);}
+
+/* ── PAGE ── */
+.page{padding:16px 14px;}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+.ph-title{font-family:'DM Serif Display',serif;font-size:24px;color:var(--text);line-height:1.1;}
+.ph-sub{font-size:12px;color:var(--textM);margin-top:3px;line-height:1.4;}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;}
+.card+.card{margin-top:12px;}
+.scard{background:var(--surfaceL);border-radius:12px;padding:14px;}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.g4{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* ── FORM ── */
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.lbl{font-size:11px;font-weight:700;color:var(--textM);letter-spacing:.05em;text-transform:uppercase;}
+.req{color:var(--red);}
+.inp{background:var(--surfaceL);border:1.5px solid var(--border);border-radius:12px;padding:13px 14px;color:var(--text);font-size:16px;font-family:'DM Sans',sans-serif;outline:none;width:100%;-webkit-appearance:none;transition:border-color .15s;}
+.inp:focus{border-color:var(--blue);}
+.inp::placeholder{color:var(--textD);}
+select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+select.inp option{background:var(--surfaceL);}
+textarea.inp{resize:none;min-height:80px;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 20px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--text);font-family:'DM Sans',sans-serif;white-space:nowrap;transition:opacity .15s;-webkit-appearance:none;}
+.btn:active{opacity:.75;}
+.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+.btn-green{background:var(--green);border-color:var(--green);color:#fff;}
+.btn-amber{background:var(--amber);border-color:var(--amber);color:#000;}
+.btn-danger{color:var(--red);border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);}
+.btn-ghost{border-color:transparent;background:var(--surfaceL);}
+.btn-sm{padding:9px 16px;font-size:13px;border-radius:10px;}
+.btn-xs{padding:6px 12px;font-size:12px;border-radius:8px;}
+.btn-full{width:100%;}
+.btn-row{display:flex;gap:10px;}
+.btn-row .btn{flex:1;}
+
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;}
+.badge-blue{background:rgba(37,99,235,.15);color:var(--blueL);border:1px solid rgba(37,99,235,.3);}
+.badge-teal{background:rgba(13,148,136,.15);color:var(--tealL);border:1px solid rgba(13,148,136,.3);}
+.badge-green{background:rgba(16,185,129,.15);color:var(--greenL);border:1px solid rgba(16,185,129,.3);}
+.badge-amber{background:rgba(245,158,11,.15);color:var(--amberL);border:1px solid rgba(245,158,11,.3);}
+.badge-red{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);}
+
+/* ── PROGRESS ── */
+.prog{background:var(--surfaceL);border-radius:6px;height:8px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:6px;transition:width .8s ease;}
+
+/* ── CALLOUT ── */
+.callout{border-radius:12px;padding:12px 14px;display:flex;gap:11px;align-items:flex-start;margin-bottom:14px;}
+.callout-amber{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);}
+.callout-blue{background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.25);}
+.callout-green{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);}
+.ci{font-size:16px;flex-shrink:0;margin-top:1px;}
+.ct{font-size:12px;font-weight:700;margin-bottom:3px;}
+.cb{font-size:12px;color:var(--textM);line-height:1.5;}
+.callout-amber .ct{color:var(--amber);}
+.callout-blue .ct{color:var(--blueL);}
+.callout-green .ct{color:var(--greenL);}
+
+/* ── MODAL SHEET ── */
+#modallay{position:fixed;inset:0;z-index:300;display:none;align-items:flex-end;}
+#modallay.open{display:flex;}
+#modal-bg{position:absolute;inset:0;background:rgba(0,0,0,.6);}
+#modal-box{position:relative;width:100%;background:var(--surface);border-radius:22px 22px 0 0;max-height:92dvh;overflow-y:auto;border-top:1px solid var(--borderL);padding-bottom:calc(16px + var(--safe-bottom));}
+.mh{display:flex;justify-content:space-between;align-items:center;padding:18px 18px 14px;border-bottom:1px solid var(--border);}
+.mh h3{font-family:'DM Serif Display',serif;font-size:20px;color:var(--text);}
+.mh-close{background:var(--surfaceL);border:none;color:var(--textM);font-size:18px;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.mb{padding:16px 18px;display:flex;flex-direction:column;gap:0;}
+.mf{display:flex;gap:10px;justify-content:flex-end;padding-top:8px;}
+
+/* ── TOAST ── */
+#toast{position:fixed;left:12px;right:12px;bottom:calc(var(--nav-h) + var(--safe-bottom) + 10px);z-index:500;padding:13px 18px;border-radius:14px;font-size:14px;font-weight:500;display:none;text-align:center;animation:toastUp .25s ease;}
+.tok{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:var(--greenL);}
+.terr{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:var(--red);}
+.tinfo{background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.4);color:var(--blueL);}
+@keyframes toastUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── TIMER ── */
+.timer-display{font-family:'Courier New',monospace;font-size:44px;font-weight:700;text-align:center;padding:16px;background:var(--surfaceL);border-radius:16px;border:2px solid var(--border);letter-spacing:3px;color:var(--textD);transition:all .3s;}
+.timer-display.on{color:var(--green);border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.06);}
+
+/* ── STAT ROW ── */
+.srow{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border);}
+.srow:last-child{border-bottom:none;}
+.srow-label{font-size:13px;color:var(--textM);}
+.srow-val{font-size:14px;font-weight:600;color:var(--text);}
+
+/* ── AVATAR ── */
+.ava{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:48px 20px;border:1.5px dashed var(--border);border-radius:16px;}
+.empty-icon{font-size:40px;margin-bottom:14px;}
+.empty-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px;}
+.empty-sub{font-size:13px;color:var(--textM);margin-bottom:20px;line-height:1.6;}
+
+/* ── MISC ── */
+.irc{font-size:10px;color:var(--textD);font-style:italic;margin-top:2px;}
+.section-title{font-size:11px;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.07em;margin:18px 0 8px;}
+.check-row{display:flex;align-items:flex-start;gap:12px;background:var(--surfaceL);border-radius:12px;padding:14px;}
+.check-row input{width:20px;height:20px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;margin-top:1px;}
+.check-row label{font-size:14px;color:var(--textM);cursor:pointer;line-height:1.4;}
+.test-card{background:var(--surfaceL);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;}
+.test-met{border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.05);}
+.test-close{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.04);}
+
+/* ── DESKTOP ── */
+@media(min-width:769px){
+  #app{flex-direction:row;}
+  #topbar{display:none;}
+  #bottomnav{display:none;}
+  #moresheet{display:none!important;}
+  #main{padding-bottom:0;overflow-y:auto;}
+  #sidebar{display:flex;flex-direction:column;width:240px;min-width:240px;height:100dvh;background:var(--surface);border-right:1px solid var(--border);flex-shrink:0;}
+  .nav-area{padding:10px 8px;flex:1;overflow-y:auto;}
+  .nav-sec{font-size:10px;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.08em;padding:8px 10px 3px;}
+  .nav-btn{width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;background:none;border:1px solid transparent;border-radius:10px;cursor:pointer;font-size:13px;color:var(--textM);text-align:left;margin-bottom:2px;transition:all .15s;font-family:'DM Sans',sans-serif;}
+  .nav-btn:hover:not(.active){background:var(--surfaceL);color:var(--text);}
+  .nav-btn.active{background:rgba(37,99,235,.18);border-color:rgba(37,99,235,.35);color:var(--blueL);font-weight:600;}
+  .nav-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0;}
+  .desk-cpa{margin:0 8px 12px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);border-radius:12px;padding:12px 14px;}
+  .desk-cpa-lbl{font-size:10px;font-weight:700;color:var(--green);letter-spacing:.04em;margin-bottom:3px;}
+  .desk-cpa-txt{font-size:11px;color:var(--textM);line-height:1.5;margin-bottom:8px;}
+  .desk-logo{padding:20px 18px 16px;border-bottom:1px solid var(--border);}
+  .desk-logo-title{font-family:'DM Serif Display',serif;font-size:22px;color:var(--text);line-height:1.1;}
+  .desk-logo-sub{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--green);margin-top:2px;}
+  .desk-logo-year{font-size:11px;color:var(--textD);margin-top:4px;}
+  .page{padding:28px 30px;}
+  .ph-title{font-size:26px;}
+  .g4{grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;}
+  .g3{grid-template-columns:1fr 1fr 1fr;gap:14px;}
+  .g2{grid-template-columns:1fr 1fr;gap:16px;}
+  .inp{font-size:13.5px;padding:10px 14px;}
+  .btn{font-size:13px;padding:9px 20px;}
+  .btn-full{width:auto;}
+  .timer-display{font-size:38px;}
+  .modal-desktop{max-width:540px;margin:auto;}
+  #modallay{align-items:center;}
+  #modal-box{border-radius:16px;max-width:540px;margin:auto;}
+  #toast{bottom:24px;left:auto;right:24px;width:320px;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- DESKTOP SIDEBAR (hidden mobile) -->
+  <div id="sidebar" style="display:none;">
+    <div class="desk-logo">
+      <div class="desk-logo-title">REPS</div>
+      <div class="desk-logo-sub">Tax App</div>
+      <div class="desk-logo-year" id="desk-year"></div>
+    </div>
+    <nav class="nav-area">
+      <div class="nav-sec">Overview</div>
+      <button class="nav-btn active" data-page="dashboard" onclick="nav('dashboard')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Dashboard</button>
+      <div class="nav-sec">Tracking</div>
+      <button class="nav-btn" data-page="log" onclick="nav('log')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,15"/></svg> Log Hours</button>
+      <button class="nav-btn" data-page="mileage" onclick="nav('mileage')"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> Mileage Log</button>
+      <button class="nav-btn" data-page="entries" onclick="nav('entries')"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> Time Entries</button>
+      <div class="nav-sec">Setup</div>
+      <button class="nav-btn" data-page="properties" onclick="nav('properties')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg> Properties</button>
+      <button class="nav-btn" data-page="participants" onclick="nav('participants')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> Participants</button>
+      <div class="nav-sec">Compliance</div>
+      <button class="nav-btn" data-page="tests" onclick="nav('tests')"><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Material Participation</button>
+      <button class="nav-btn" data-page="audit" onclick="nav('audit')"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Audit Defense</button>
+      <div class="nav-sec">History</div>
+      <button class="nav-btn" data-page="archives" onclick="nav('archives')"><svg viewBox="0 0 24 24"><polyline points="21,8 21,21 3,21 3,8"/><rect x="1" y="3" width="22" height="5" rx="1"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Year Archives</button>
+    </nav>
+    <div class="desk-cpa">
+      <div class="desk-cpa-lbl">§469(c)(7) STATUS</div>
+      <div class="desk-cpa-txt"><span id="d-hrs">0.0</span> / 750 hrs · <span id="d-pct">0%</span></div>
+      <button class="btn btn-green btn-sm btn-full" onclick="toast('CPA scheduling in full version','info')" style="margin-top:4px;">Schedule CPA Review</button>
+    </div>
+  </div>
+
+  <!-- MOBILE TOP BAR -->
+  <div id="topbar">
+    <div>
+      <div class="tb-logo">REPS <span class="tb-sub">Tax App</span></div>
+      <div style="font-size:10px;color:var(--textD);" id="mob-year"></div>
+    </div>
+    <div class="tb-status">
+      <div class="tb-hrs"><span id="m-hrs">0.0</span> / 750 hrs</div>
+      <div class="tb-pct"><span id="m-pct">0%</span> of profession</div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div id="main"></div>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav id="bottomnav">
+    <button class="bnav active" data-page="dashboard" onclick="nav('dashboard')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Home
+    </button>
+    <button class="bnav" data-page="log" onclick="nav('log')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,15"/></svg>
+      Log
+    </button>
+    <button class="bnav" data-page="entries" onclick="nav('entries')">
+      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Entries
+    </button>
+    <button class="bnav" data-page="properties" onclick="nav('properties')">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      Props
+    </button>
+    <button class="bnav" id="more-btn" onclick="openMore()">
+      <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>
+      More
+    </button>
+  </nav>
+</div>
+
+<!-- MORE SHEET -->
+<div id="moresheet">
+  <div id="more-backdrop" onclick="closeMore()"></div>
+  <div id="more-panel">
+    <div id="more-handle"></div>
+    <button class="more-row" data-page="mileage" onclick="nav('mileage');closeMore()"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> Mileage Log</button>
+    <button class="more-row" data-page="participants" onclick="nav('participants');closeMore()"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> Participants</button>
+    <button class="more-row" data-page="tests" onclick="nav('tests');closeMore()"><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Material Participation</button>
+    <button class="more-row" data-page="audit" onclick="nav('audit');closeMore()"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Audit Defense</button>
+    <button class="more-row" data-page="archives" onclick="nav('archives');closeMore()"><svg viewBox="0 0 24 24"><polyline points="21,8 21,21 3,21 3,8"/><rect x="1" y="3" width="22" height="5" rx="1"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Year Archives</button>
+    <div style="margin:8px 20px 0;padding-top:10px;border-top:1px solid var(--border);">
+      <div style="font-size:10px;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">§469(c)(7) Status</div>
+      <div style="font-size:14px;color:var(--textM);"><span id="ms-hrs">0.0</span> / 750 hrs · <span id="ms-pct">0%</span> of profession</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modallay" onclick="if(event.target===this||event.target.id==='modal-bg')closeModal()">
+  <div id="modal-bg"></div>
+  <div id="modal-box"></div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ── CONSTANTS ────────────────────────────────────────────────────────────────
+const YEAR = new Date().getFullYear();
+const MR = 0.70; // mileage rate
+
+const ACT_TYPES = ['Development','Redevelopment','Construction','Reconstruction','Acquisition','Conversion','Rental Operations','Management','Leasing','Brokerage','Maintenance & Repairs','Tenant Communication','Marketing & Advertising','Bookkeeping & Admin','Property Inspections','Lease Negotiations','Legal & Compliance','Education & Research','Travel to Property'];
+
+const MP_TESTS = [
+  {n:1,name:'500+ Hours',desc:'Participated more than 500 hours during the year',thresh:500,irc:'Reg §1.469-5T(a)(1)'},
+  {n:2,name:'Substantially All',desc:'Your participation constitutes substantially all participation in the activity',thresh:null,irc:'Reg §1.469-5T(a)(2)'},
+  {n:3,name:'100 Hrs & Most',desc:'100+ hours and no other individual participates more than you',thresh:100,irc:'Reg §1.469-5T(a)(3)'},
+  {n:4,name:'Significant Participation',desc:'100+ hours here and 500+ aggregate hours across all significant participation activities',thresh:100,irc:'Reg §1.469-5T(a)(4)'},
+  {n:5,name:'5 of Prior 10 Years',desc:'Materially participated in any 5 of the prior 10 taxable years',thresh:null,irc:'Reg §1.469-5T(a)(5)'},
+  {n:6,name:'Personal Service — 3 Prior Years',desc:'Personal service activity with material participation in any 3 prior years',thresh:null,irc:'Reg §1.469-5T(a)(6)'},
+  {n:7,name:'Facts & Circumstances',desc:'Regular, continuous, and substantial basis — minimum 100 hours required',thresh:100,irc:'Reg §1.469-5T(a)(7)'},
+];
+
+const AVC = [
+  {bg:'rgba(37,99,235,.18)',bd:'rgba(37,99,235,.4)',tx:'#60a5fa'},
+  {bg:'rgba(13,148,136,.18)',bd:'rgba(13,148,136,.4)',tx:'#2dd4bf'},
+  {bg:'rgba(245,158,11,.18)',bd:'rgba(245,158,11,.4)',tx:'#fbbf24'},
+  {bg:'rgba(168,85,247,.18)',bd:'rgba(168,85,247,.4)',tx:'#c084fc'},
+];
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let S = {
+  page:'dashboard', nextId:100,
+  timer:{running:false,secs:0,propId:'',actType:'',iv:null},
+  aggElect:false, aggYear:null,
+  otherProfHours:0,
+  props:[], parts:[], entries:[], miles:[],
+  archives:[], lastYear:YEAR,
+};
+
+// ── PERSIST ──────────────────────────────────────────────────────────────────
+function save(){
+  try{
+    const t={...S};
+    t.timer={running:false,secs:0,propId:'',actType:'',iv:null};
+    localStorage.setItem('reps_v3',JSON.stringify(t));
+  }catch(e){}
+}
+function load(){
+  try{
+    const r=localStorage.getItem('reps_v3');
+    if(!r)return;
+    const d=JSON.parse(r);
+    Object.keys(d).forEach(k=>{if(k!=='timer')S[k]=d[k];});
+  }catch(e){}
+}
+
+// ── YEAR ROLLOVER ─────────────────────────────────────────────────────────────
+function checkRollover(){
+  const cy=new Date().getFullYear();
+  if(!S.lastYear||S.lastYear>=cy)return;
+  const rH=repsHours();
+  const pp=profPct();
+  const arc={
+    year:S.lastYear, archivedAt:new Date().toISOString(),
+    entries:[...S.entries], miles:[...S.miles],
+    props:[...S.props], parts:S.parts.map(p=>({...p})),
+    totalHours:S.entries.reduce((s,e)=>s+e.dur,0),
+    totalMiles:S.miles.reduce((s,m)=>s+m.miles,0),
+    repsHours:rH, profPct:pp,
+    q750:rH>=750, qPct:pp>50,
+    entryCount:S.entries.length, mileTrips:S.miles.length,
+  };
+  S.archives=[arc,...S.archives.filter(a=>a.year!==S.lastYear)].slice(0,10);
+  S.entries=[]; S.miles=[]; S.otherProfHours=0; S.lastYear=cy;
+  save();
+  toast(`Happy New Year! ${arc.year} data archived ✓`,'ok');
+}
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+const fmt   = n=>parseFloat(n||0).toFixed(1);
+const fmtC  = n=>'$'+parseFloat(n||0).toFixed(0);
+const pct   = (a,b)=>b>0?Math.min(100,Math.round(a/b*100)):0;
+const ini   = n=>n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+const gp    = id=>S.props.find(p=>p.id===id);
+const gpart = id=>S.parts.find(p=>p.id===id);
+const tc    = t=>t==='STR'?'teal':'blue';
+const nowTS = ()=>new Date().toISOString();
+const fmtTm = s=>[Math.floor(s/3600),Math.floor((s%3600)/60),s%60].map(n=>String(n).padStart(2,'0')).join(':');
+
+function repsHours(){
+  const pr=S.parts.find(p=>p.main);
+  if(!pr)return 0;
+  return S.entries.filter(e=>e.partId===pr.id).reduce((s,e)=>s+e.dur,0);
+}
+function propHours(propId,partId){
+  return S.entries.filter(e=>e.propId===propId&&(!partId||e.partId===partId)).reduce((s,e)=>s+e.dur,0);
+}
+function profPct(){
+  const rH=repsHours(),tot=S.otherProfHours+rH;
+  return tot===0?0:Math.round(rH/tot*100);
+}
+function mpMet(propId){
+  const pr=S.parts.find(p=>p.main);if(!pr)return[];
+  const mH=propHours(propId,pr.id);
+  const maxO=Math.max(0,...S.parts.filter(p=>!p.main).map(p=>propHours(propId,p.id)));
+  const met=[];
+  if(mH>500)met.push(1);
+  if(mH>0&&maxO===0)met.push(2);
+  if(mH>=100&&mH>maxO)met.push(3);
+  if(mH>=100)met.push(4,7);
+  return met;
+}
+function prog(v,m,c){
+  return `<div class="prog"><div class="prog-fill" style="width:${pct(v,m)}%;background:${c};"></div></div>`;
+}
+
+// ── UI HELPERS ───────────────────────────────────────────────────────────────
+function toast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className=({ok:'tok',err:'terr',info:'tinfo'}[type]||'tok');
+  t.style.display='block';clearTimeout(t._t);
+  t._t=setTimeout(()=>t.style.display='none',2800);
+}
+function openModal(html){
+  document.getElementById('modal-box').innerHTML=html;
+  document.getElementById('modallay').classList.add('open');
+}
+function closeModal(){document.getElementById('modallay').classList.remove('open');}
+function openMore(){document.getElementById('moresheet').classList.add('open');}
+function closeMore(){document.getElementById('moresheet').classList.remove('open');}
+
+function updateStatus(){
+  const h=repsHours(),p=profPct();
+  const fmt2=v=>parseFloat(v||0).toFixed(1);
+  ['m-hrs','d-hrs','ms-hrs'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=fmt2(h);});
+  ['m-pct','d-pct','ms-pct'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=p+'%';});
+}
+
+function nav(page){
+  S.page=page;
+  document.querySelectorAll('.nav-btn,.bnav').forEach(b=>{
+    b.classList.toggle('active',b.dataset.page===page);
+  });
+  const morePages=['mileage','participants','tests','audit','archives'];
+  if(morePages.includes(page))document.getElementById('more-btn')?.classList.add('active');
+  document.querySelectorAll('.more-row').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
+  render();
+}
+function render(){
+  document.getElementById('main').scrollTop=0;
+  const pages={dashboard:pgDash,log:pgLog,mileage:pgMileage,entries:pgEntries,properties:pgProps,participants:pgParts,tests:pgTests,audit:pgAudit,archives:pgArchives};
+  (pages[S.page]||pgDash)();
+  updateStatus();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════════════════════════
+function pgDash(){
+  const rH=repsHours(),sH=S.props.filter(p=>p.type==='STR').reduce((s,p)=>s+propHours(p.id),0),pp=profPct();
+  const totMi=S.miles.reduce((s,m)=>s+m.miles,0);
+  const mH=Array.from({length:12},(_,i)=>S.entries.filter(e=>new Date(e.date).getMonth()===i).reduce((s,e)=>s+e.dur,0));
+  const maxM=Math.max(...mH,1),cm=new Date().getMonth();
+  const catT={};S.entries.forEach(e=>{catT[e.act]=(catT[e.act]||0)+e.dur;});
+  const cats=Object.entries(catT).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  const catC={'Rental Operations':'var(--blue)','Management':'var(--teal)','Bookkeeping & Admin':'var(--amber)','Maintenance & Repairs':'var(--green)','Travel to Property':'#f97316'};
+  const isEmpty=!S.props.length&&!S.parts.length;
+
+  const ring=(v,m,color,sz=90)=>{
+    const r=(sz-10)/2,ci=2*Math.PI*r,p2=Math.min(1,v/m),off=ci*(1-p2);
+    return `<svg width="${sz}" height="${sz}" style="transform:rotate(-90deg);flex-shrink:0" viewBox="0 0 ${sz} ${sz}"><circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="none" stroke="var(--surfaceL)" stroke-width="7"/><circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${ci.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" style="transition:stroke-dashoffset 1s ease"/></svg>`;
+  };
+
+  document.getElementById('main').innerHTML=`<div class="page">
+    ${isEmpty?`<div class="empty" style="margin-bottom:16px;">
+      <div class="empty-icon">🏠</div>
+      <div class="empty-title">Let's get started</div>
+      <div class="empty-sub">Add yourself as a participant, then your properties. The app tracks all §469(c)(7) tests automatically.</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn btn-primary btn-full" onclick="nav('participants')">+ Add Yourself First</button>
+        <button class="btn btn-ghost btn-full" onclick="nav('properties')">+ Add a Property</button>
+        <button class="btn btn-green btn-full" onclick="nav('log')">⏱ Log First Hours</button>
+      </div>
+    </div>`:''}
+
+    <div class="g2" style="margin-bottom:12px;">
+      <div class="scard">
+        <div style="font-size:10px;font-weight:600;color:var(--textD);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">REPS Hours</div>
+        <div style="font-size:26px;font-weight:700;color:${rH>=750?'var(--green)':'var(--text)'};">${fmt(rH)}</div>
+        <div style="font-size:11px;color:var(--textM);">/ 750 required</div>
+        <div style="margin-top:8px;">${prog(rH,750,rH>=750?'var(--green)':'var(--blue)')}</div>
+      </div>
+      <div class="scard">
+        <div style="font-size:10px;font-weight:600;color:var(--textD);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Profession %</div>
+        <div style="font-size:26px;font-weight:700;color:${pp>50?'var(--green)':'var(--amber)'};">${pp}%</div>
+        <div style="font-size:11px;color:var(--textM);">>50% required</div>
+        <div style="margin-top:8px;">${prog(pp,100,pp>50?'var(--green)':'var(--amber)')}</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;">
+      <div style="display:flex;gap:14px;align-items:flex-start;">
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;">§469(c)(7)(B) — 750 Hour Test</div>
+          <div class="irc">Real Estate Professional Status</div>
+          <div style="margin-top:10px;">${prog(rH,750,'var(--blue)')}</div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--textM);margin-top:6px;">
+            <span>${fmt(rH)} hrs logged</span><span>${Math.max(0,750-rH).toFixed(1)} remaining</span>
+          </div>
+        </div>
+        <div style="position:relative;flex-shrink:0;">${ring(rH,750,'var(--blue)')}
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <span style="font-size:16px;font-weight:700;color:var(--text);">${pct(rH,750)}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;">
+      <div style="display:flex;gap:14px;align-items:flex-start;">
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;">STR Material Participation</div>
+          <div class="irc">§469 Short-Term Rental Loophole</div>
+          <div style="margin-top:10px;">${prog(sH,500,'var(--teal)')}</div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--textM);margin-top:6px;">
+            <span>${fmt(sH)} hrs in STR</span><span>${Math.max(0,500-sH).toFixed(1)} to Test 1</span>
+          </div>
+          <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;">
+            ${[{t:'Test 1 (§1.469-5T(a)(1)): 500+ hours',m:sH>500},{t:'Test 3 (§1.469-5T(a)(3)): 100+ & most',m:sH>=100},{t:'Test 4 (§1.469-5T(a)(4)): 100+ & 500 aggregate',m:sH>=100&&rH>=500}]
+            .map(x=>`<div style="font-size:11px;color:var(--textM);display:flex;gap:6px;align-items:center;"><span style="color:${x.m?'var(--green)':'var(--amber)'};">${x.m?'✓':'○'}</span>${x.t}</div>`).join('')}
+          </div>
+        </div>
+        <div style="position:relative;flex-shrink:0;">${ring(sH,500,'var(--teal)')}
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <span style="font-size:16px;font-weight:700;color:var(--text);">${pct(sH,500)}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="g2" style="margin-bottom:12px;">
+      <div class="scard">
+        <div style="font-size:10px;font-weight:600;color:var(--textD);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Properties</div>
+        <div style="font-size:22px;font-weight:700;color:var(--text);">${S.props.filter(p=>p.active).length}</div>
+        <div style="font-size:11px;color:var(--textM);">${S.props.filter(p=>p.active&&p.type==='LTR').length} LTR · ${S.props.filter(p=>p.active&&p.type==='STR').length} STR</div>
+      </div>
+      <div class="scard">
+        <div style="font-size:10px;font-weight:600;color:var(--textD);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Mileage</div>
+        <div style="font-size:22px;font-weight:700;color:var(--amber);">${fmtC(totMi*MR)}</div>
+        <div style="font-size:11px;color:var(--textM);">${Math.round(totMi)} mi · §274(d)</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;">Hours by Month — ${YEAR}</div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:80px;">
+        ${['J','F','M','A','M','J','J','A','S','O','N','D'].map((m,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
+          <div style="width:100%;border-radius:3px 3px 0 0;background:${i===cm?'var(--blue)':'var(--surfaceL)'};height:${Math.round(mH[i]/maxM*70)}px;min-height:2px;"></div>
+          <div style="font-size:8px;color:var(--textD);">${m}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    ${cats.length?`<div class="card">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;">By Activity Type</div>
+      ${cats.map(([n,h])=>`<div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--textM);margin-bottom:4px;"><span>${n}</span><strong style="color:var(--text);">${fmt(h)}h</strong></div>
+        ${prog(h,cats[0][1],catC[n]||'var(--blue)')}
+      </div>`).join('')}
+    </div>`:''}
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// LOG HOURS
+// ══════════════════════════════════════════════════════════════════════════════
+function pgLog(){
+  const pOpts=S.props.filter(p=>p.active).map(p=>`<option value="${p.id}">${p.name} (${p.type})</option>`).join('');
+  const ptOpts=S.parts.filter(p=>p.active).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  const aOpts=ACT_TYPES.map(a=>`<option value="${a}">${a}</option>`).join('');
+  const today=new Date().toISOString().split('T')[0];
+  const isOn=S.timer.running;
+
+  document.getElementById('main').innerHTML=`<div class="page">
+    <div class="ph"><div><div class="ph-title">Log Hours</div><div class="ph-sub">§469(c)(7)(B) · Timestamped automatically</div></div></div>
+
+    <div class="card" style="margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px;">⏱ Live Timer</div>
+      <div class="field">
+        <label class="lbl">Property</label>
+        <select class="inp" id="t-prop">${pOpts||'<option>Add a property first</option>'}</select>
+      </div>
+      <div class="field">
+        <label class="lbl">Activity Type</label>
+        <select class="inp" id="t-act">${aOpts}</select>
+      </div>
+      <div class="timer-display${isOn?' on':''}" id="tdisplay">${fmtTm(S.timer.secs)}</div>
+      <div style="margin-top:12px;">
+        <button class="btn ${isOn?'btn-danger':'btn-green'} btn-full" id="timer-btn" onclick="toggleTimer()" style="font-size:17px;padding:16px;">
+          ${isOn?'■ Stop &amp; Log':'▶ Start Timer'}
+        </button>
+      </div>
+      ${isOn?`<div style="text-align:center;font-size:12px;color:var(--green);margin-top:8px;">● Recording — ${S.timer.actType||'Activity'}</div>`:''}
+    </div>
+
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px;">Manual Entry</div>
+      <div class="g2" style="margin-bottom:0;">
+        <div class="field"><label class="lbl">Date <span class="req">*</span></label><input class="inp" type="date" id="f-date" value="${today}"></div>
+        <div class="field"><label class="lbl">Hours <span class="req">*</span></label><input class="inp" type="number" id="f-dur" placeholder="e.g. 2.5" step="0.25" min="0.1" max="24" inputmode="decimal"></div>
+      </div>
+      <div class="field"><label class="lbl">Activity Type §469(c)(7)(B) <span class="req">*</span></label><select class="inp" id="f-act"><option value="">Select…</option>${aOpts}</select></div>
+      <div class="field"><label class="lbl">Description <span class="req">*</span></label><input class="inp" id="f-desc" placeholder="e.g. Called plumber re: unit 2 leak"></div>
+      <div class="field"><label class="lbl">Property <span class="req">*</span></label><select class="inp" id="f-prop"><option value="">Select…</option>${pOpts||''}</select></div>
+      <div class="field"><label class="lbl">Participant <span class="req">*</span></label><select class="inp" id="f-part"><option value="">Select…</option>${ptOpts||''}</select></div>
+      <div class="field"><label class="lbl">Notes</label><textarea class="inp" id="f-notes" placeholder="Audit context — contractor, tenant, invoice…"></textarea></div>
+      <div style="background:var(--surfaceL);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:var(--textD);">⏰ Creation timestamp auto-recorded — Reg §1.469-5T(f)(4)</div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="clearLogForm()">Clear</button>
+        <button class="btn btn-primary" onclick="submitEntry()" style="flex:2;">+ Add Entry</button>
+      </div>
+    </div>
+  </div>`;
+
+  if(isOn){
+    const tp=document.getElementById('t-prop'),ta=document.getElementById('t-act');
+    if(tp&&S.timer.propId)tp.value=S.timer.propId;
+    if(ta&&S.timer.actType)ta.value=S.timer.actType;
+  }
+}
+
+function toggleTimer(){
+  if(!S.timer.running){
+    S.timer.propId=document.getElementById('t-prop').value;
+    S.timer.actType=document.getElementById('t-act').value;
+    S.timer.running=true;
+    S.timer.iv=setInterval(()=>{
+      S.timer.secs++;
+      const d=document.getElementById('tdisplay');
+      if(d){d.textContent=fmtTm(S.timer.secs);d.classList.add('on');}
+    },1000);
+    const b=document.getElementById('timer-btn');
+    if(b){b.innerHTML='■ Stop &amp; Log';b.className='btn btn-danger btn-full';}
+  } else {
+    clearInterval(S.timer.iv);
+    const hrs=Math.max(0.25,Math.round((S.timer.secs/3600)*4)/4);
+    S.timer.running=false;
+    const d=document.getElementById('tdisplay');
+    if(d){d.textContent='00:00:00';d.classList.remove('on');}
+    const b=document.getElementById('timer-btn');
+    if(b){b.innerHTML='▶ Start Timer';b.className='btn btn-green btn-full';}
+    const fp=document.getElementById('f-prop'),fa=document.getElementById('f-act'),fd=document.getElementById('f-dur');
+    if(fp)fp.value=S.timer.propId;if(fa)fa.value=S.timer.actType;if(fd)fd.value=hrs.toFixed(2);
+    S.timer.secs=0;
+    toast('Timer stopped — entry pre-filled below','info');
+  }
+}
+
+function clearLogForm(){
+  ['f-dur','f-act','f-desc','f-prop','f-part','f-notes'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const d=document.getElementById('f-date');if(d)d.value=new Date().toISOString().split('T')[0];
+}
+
+function submitEntry(){
+  const date=document.getElementById('f-date')?.value;
+  const dur=parseFloat(document.getElementById('f-dur')?.value);
+  const act=document.getElementById('f-act')?.value;
+  const desc=document.getElementById('f-desc')?.value.trim();
+  const propId=parseInt(document.getElementById('f-prop')?.value);
+  const partId=parseInt(document.getElementById('f-part')?.value);
+  const notes=document.getElementById('f-notes')?.value;
+  if(!date||!dur||!act||!desc||!propId||!partId){toast('Fill in all required fields','err');return;}
+  S.entries.unshift({id:S.nextId++,date,dur,act,desc,propId,partId,notes,ts:nowTS()});
+  clearLogForm();save();updateStatus();
+  toast('Entry logged ✓','ok');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MILEAGE
+// ══════════════════════════════════════════════════════════════════════════════
+function pgMileage(){
+  const tot=S.miles.reduce((s,m)=>s+m.miles,0);
+  const today=new Date().toISOString().split('T')[0];
+  const pOpts=S.props.filter(p=>p.active).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+
+  const rows=[...S.miles].sort((a,b)=>b.date.localeCompare(a.date)).map(m=>{
+    const p=gp(m.propId);
+    return `<div class="card" style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);">${m.miles.toFixed(1)} mi</div>
+          <div style="font-size:11px;color:var(--textM);">${m.date}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="font-size:15px;font-weight:700;color:var(--amber);">${fmtC(m.miles*MR)}</div>
+          <button onclick="delMile(${m.id})" style="background:none;border:none;color:var(--textD);font-size:18px;cursor:pointer;padding:4px;">✕</button>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--textM);margin-bottom:3px;">${m.from} → ${p?p.name:'—'}</div>
+      <div style="font-size:12px;color:var(--textD);">${m.purpose}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('main').innerHTML=`<div class="page">
+    <div class="ph"><div><div class="ph-title">Mileage Log</div><div class="ph-sub">IRC §274(d) — required for travel deductions</div></div></div>
+
+    <div class="g2" style="margin-bottom:14px;">
+      <div class="scard"><div style="font-size:22px;font-weight:700;color:var(--amber);">${fmtC(tot*MR)}</div><div style="font-size:11px;color:var(--textM);margin-top:2px;">Deduction value</div></div>
+      <div class="scard"><div style="font-size:22px;font-weight:700;color:var(--text);">${Math.round(tot)}</div><div style="font-size:11px;color:var(--textM);margin-top:2px;">Miles · $${MR}/mi</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px;">+ Add Trip</div>
+      <div class="g2" style="margin-bottom:0;">
+        <div class="field"><label class="lbl">Date <span class="req">*</span></label><input class="inp" type="date" id="md" value="${today}"></div>
+        <div class="field"><label class="lbl">Miles <span class="req">*</span></label><input class="inp" type="number" id="mm" placeholder="24.5" step="0.1" min="0.1" inputmode="decimal"></div>
+      </div>
+      <div class="field"><label class="lbl">Starting Point <span class="req">*</span></label><input class="inp" id="mf" placeholder="e.g. Home — 123 Main St"></div>
+      <div class="field"><label class="lbl">Destination Property <span class="req">*</span></label><select class="inp" id="mp"><option value="">Select…</option>${pOpts}</select></div>
+      <div class="field"><label class="lbl">Business Purpose <span class="req">*</span></label><input class="inp" id="mpur" placeholder="e.g. Inspect unit 2, meet contractor"></div>
+      <button class="btn btn-amber btn-full" onclick="addMile()">+ Add Trip</button>
+    </div>
+
+    ${rows||`<div class="empty"><div class="empty-icon">🚗</div><div class="empty-title">No trips logged yet</div><div class="empty-sub">Log your first trip above.</div></div>`}
+  </div>`;
+}
+
+function addMile(){
+  const date=document.getElementById('md').value;
+  const miles=parseFloat(document.getElementById('mm').value);
+  const from=document.getElementById('mf').value.trim();
+  const propId=parseInt(document.getElementById('mp').value);
+  const purpose=document.getElementById('mpur').value.trim();
+  if(!date||!miles||!from||!propId||!purpose){toast('All fields required — §274(d)','err');return;}
+  S.miles.unshift({id:S.nextId++,date,miles,from,propId,purpose,ts:nowTS()});
+  save();toast('Mileage logged ✓','ok');pgMileage();
+}
+function delMile(id){S.miles=S.miles.filter(m=>m.id!==id);save();toast('Deleted','ok');pgMileage();}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TIME ENTRIES
+// ══════════════════════════════════════════════════════════════════════════════
+function pgEntries(){
+  const tot=S.entries.reduce((s,e)=>s+e.dur,0);
+  const cards=[...S.entries].sort((a,b)=>b.date.localeCompare(a.date)).map(e=>{
+    const p=gp(e.propId),pt=gpart(e.partId);
+    return `<div class="card" style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);">${fmt(e.dur)} hrs</div>
+          <div style="font-size:11px;color:var(--textM);">${e.date}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="badge badge-blue" style="font-size:9px;">${(e.act||'').split(' ').slice(0,2).join(' ')}</span>
+          <button onclick="delEntry(${e.id})" style="background:none;border:none;color:var(--textD);font-size:18px;cursor:pointer;padding:4px;">✕</button>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text);margin-bottom:6px;">${e.desc||'—'}</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        ${p?`<span class="badge badge-${tc(p.type)}" style="font-size:9px;">${p.name} · ${p.type}</span>`:''}
+        ${pt?`<span style="font-size:11px;color:var(--textM);">◉ ${pt.name}</span>`:''}
+        <span style="font-size:10px;color:${e.ts?'var(--greenL)':'var(--red)'};" title="${e.ts||'No timestamp'}">${e.ts?'✓ TS':''}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('main').innerHTML=`<div class="page">
+    <div class="ph">
+      <div><div class="ph-title">Time Entries</div><div class="ph-sub">${S.entries.length} entries · ${fmt(tot)} hrs</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()" style="flex-shrink:0;">↓ CSV</button>
+    </div>
+    ${cards||`<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No entries yet</div><div class="empty-sub">Go to Log Hours to add your first entry.</div></div>`}
+  </div>`;
+}
+function delEntry(id){S.entries=S.entries.filter(e=>e.id!==id);save();updateStatus();toast('Deleted','ok');pgEntries();}
+function exportCSV(){
+  if(!S.entries.length){toast('No entries to export','err');return;}
+  const hdr='Date,Hours,Activity Type,Description,Property,Address,Type,Participant,Notes,Timestamp\n';
+  const rows=S.entries.map(e=>{const p=gp(e.propId),pt=gpart(e.partId);return[e.date,e.dur,e.act,`"${(e.desc||'').replace(/"/g,'""')}"`,p?p.name:'',p?p.address||'':'',p?p.type:'',pt?pt.name:'',`"${(e.notes||'').replace(/"/g,'""')}"`,e.ts||''].join(',');}).join('\n');
+  const blob=new Blob([hdr+rows],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`REPS_${YEAR}_Hours.csv`;a.click();
+  toast('Exported ✓','ok');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PROPERTIES
+// ══════════════════════════════════════════════════════════════════════════════
+function pgProps(){
+  const active=S.props.filter(p=>p.active),arch=S.props.filter(p=>!p.active);
+
+  const cards=active.map(p=>{
+    const hrs=propHours(p.id),met=mpMet(p.id);
+    return `<div class="card" style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div>
+          <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:3px;">${p.name}</div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <span class="badge badge-${tc(p.type)}">${p.type}</span>
+            ${met.length?met.map(n=>`<span class="badge badge-green" style="font-size:9px;">Test ${n}</span>`).join(''):'<span style="font-size:10px;color:var(--textD);">No tests met yet</span>'}
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:20px;font-weight:700;color:var(--text);">${fmt(hrs)}</div>
+          <div style="font-size:10px;color:var(--textD);">hrs this year</div>
+        </div>
+      </div>
+      ${p.address?`<div style="font-size:12px;color:var(--textM);margin-bottom:10px;">📍 ${p.address}</div>`:''}
+      <div class="btn-row">
+        <button class="btn btn-ghost btn-sm" onclick="editProp(${p.id})">Edit</button>
+        <button class="btn btn-sm" style="color:var(--textD);border-color:var(--border);" onclick="archProp(${p.id})">Archive</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('main').innerHTML=`<div class="page">
+    <div class="ph">
+      <div><div class="ph-title">Properties</div><div class="ph-sub">${active.length} active · ${arch.length} archived</div></div>
+      <button class="btn btn-primary btn-sm" onclick="addProp()" style="flex-shrink:0;">+ Add</button>
+    </div>
+
+    ${!S.aggElect?`<div class="callout callout-amber">
+      <span class="ci">⚠</span>
+      <div><div class="ct">§1.469-9(e)(1) Aggregation Election</div>
+      <div class="cb">Not made. Without this election you must meet material participation tests per property separately. <button class="btn btn-xs btn-amber" onclick="doAgg()" style="margin-top:8px;">Mark as Made</button></div></div>
+    </div>`:`<div class="callout callout-green">
+      <span class="ci">✓</span>
+      <div><div class="ct">Aggregation Election Active — ${S.aggYear}</div>
+      <div class="cb">All rental interests treated as a single activity for material participation. §1.469-9(e)(1)</div></div>
+    </div>`}
+
+    ${active.length===0?`<div class="empty"><div class="empty-icon">⌂</div><div class="empty-title">No properties yet</div><div class="empty-sub">Add your first rental property to start tracking hours.</div><button class="btn btn-primary btn-full" onclick="addProp()">+ Add Property</button></div>`:cards}
+
+    ${arch.length?`<div class="section-title">Archived</div>
+      ${arch.map(p=>`<div class="card" style="opacity:.55;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+        <div><span style="font-size:14px;">${p.name}</span> <span class="badge badge-${tc(p.type)}" style="margin-left:6px;">${p.type}</span></div>
+        <button class="btn btn-xs btn-ghost" onclick="restProp(${p.id})">Restore</button>
+      </div>`).join('')}`:''}
+  </div>`;
+}
+
+function doAgg(){S.aggElect=true;S.aggYear=YEAR;save();toast('Aggregation election recorded ✓','ok');pgProps();}
+
+function addProp(){
+  openModal(`<div class="mh"><h3>Add Property</h3><button class="mh-close" onclick="closeModal()">✕</button></div>
+    <div class="mb">
+      <div class="field"><label class="lbl">Name <span class="req">*</span></label><input class="inp" id="pn" placeholder="e.g. Main Street Duplex"></div>
+      <div class="field"><label class="lbl">Type <span class="req">*</span></label><select class="inp" id="pt"><option value="LTR">LTR — Long-Term Rental</option><option value="STR">STR — Short-Term Rental</option></select></div>
+      <div class="field"><label class="lbl">Full Address</label><input class="inp" id="pa" placeholder="Street, City, State ZIP"></div>
+      <div class="field"><label class="lbl">Purchase Date</label><input class="inp" type="date" id="pd"></div>
+      <div class="field"><label class="lbl">Notes</label><textarea class="inp" id="pnotes" rows="2" placeholder="Any notes…"></textarea></div>
+      <div class="mf"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveProp(null)">Add Property</button></div>
+    </div>`);
+}
+function editProp(id){
+  const p=gp(id);
+  openModal(`<div class="mh"><h3>Edit Property</h3><button class="mh-close" onclick="closeModal()">✕</button></div>
+    <div class="mb">
+      <div class="field"><label class="lbl">Name <span class="req">*</span></label><input class="inp" id="pn" value="${p.name}"></div>
+      <div class="field"><label class="lbl">Type</label><select class="inp" id="pt"><option value="LTR" ${p.type==='LTR'?'selected':''}>LTR — Long-Term Rental</option><option value="STR" ${p.type==='STR'?'selected':''}>STR — Short-Term Rental</option></select></div>
+      <div class="field"><label class="lbl">Full Address</label><input class="inp" id="pa" value="${p.address||''}"></div>
+      <div class="field"><label class="lbl">Purchase Date</label><input class="inp" type="date" id="pd" value="${p.purchaseDate||''}"></div>
+      <div class="field"><label class="lbl">Notes</label><textarea class="inp" id="pnotes" rows="2">${p.notes||''}</textarea></div>
+      <div class="mf"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveProp(${id})">Save</button></div>
+    </div>`);
+}
+function saveProp(id){
+  const name=document.getElementById('pn').value.trim();
+  if(!name){toast('Name required','err');return;}
+  const data={name,type:document.getElementById('pt').value,address:document.getElementById('pa').value,purchaseDate:document.getElementById('pd').value,notes:document.getElementById('pnotes').value};
+  if(id)S.props=S.props.map(p=>p.id===id?{...p,...data}:p);
+  else S.props.push({...data,id:S.nextId++,active:true});
+  closeModal();save();toast(id?'Updated ✓':'Property added ✓','ok');pgProps();
+}
+function archProp(id){S.props=S.props.map(p=>p.id===id?{...p,active:false}:p);save();toast('Archived','ok');pgProps();}
+function restProp(id){S.props=S.props.map(p=>p.id===id?{...p,active:true}:p);save();toast('Restored ✓','ok');pgProps();}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PARTICIPANTS
+// ══════════════════════════════════════════════════════════════════════════════
+function pgParts(){
+  const sorted=[...S.parts].sort((a,b)=>{
+    const ha=S.entries.filter(e=>e.partId===a.id).reduce((s,e)=>s+e.dur,0);
+    const hb=S.entries.filter(e=>e.partId===b.id).reduce((s,e)=>s+e.dur,0);
+    return hb-ha;
+  });
+  const maxH=Math.max(1,...S.parts.map(p=>S.entries.filter(e=>e.partId===p.id).reduce((s,e)=>s+e.dur,0)));
+  const pp=profPct();
+
+  const cards=S.parts.map((p,i)=>{
+    const hrs=S.entries.filter(e=>e.partId===p.id).reduce((s,e)=>s+e.dur,0);
+    const ac=AVC[i%4];
+    return `<div class="card" style="margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div class="ava" style="background:${ac.bg};border:1.5px solid ${ac.bd};color:${ac.tx};">${ini(p.name)}</div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:600;color:var(--text);">${p.name}</div>
+          <div style="font-size:12px;color:var(--textM);">${p.role||'No role'}</div>
+          ${p.spouse?`<div style="font-size:10px;color:var(--textD);">§469(c)(7)(C) — tracked separately</div>`:''}
+        </div>
+        ${p.main?'<span class="badge badge-green">Primary</span>':''}
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--textM);margin-bottom:6px;">
+        <span>Hours logged</span><strong style="color:var(--text);">${fmt(hrs)} hrs</strong>
+      </div>
+      ${prog(hrs,750,ac.tx)}
+      <div style="font-size:10px;color:var(--textD);margin-top:4px;margin-bottom:12px;">${p.main?`${pct(hrs,750)}% toward 750-hr REPS threshold`:'Tracked separately per §469(c)(7)(C)'}</div>
+      <div class="btn-row">
+        <button class="btn btn-ghost btn-sm" onclick="editPart(${p.id})">Edit</button>
+        ${!p.main?`<button class="btn btn-sm btn-danger" onclick="delPart(${p.id})">Remove</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  const compRows=sorted.map((p,i)=>{
+    const hrs=S.entries.filter(e=>e.partId===p.id).reduce((s,e)=>s+e.dur,0);
+    return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+      <div style="width:120px;font-size:13px;color:${i===0?'var(--text)':'var(--textM)'};font-weight:${i===0?600:400};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
+      <div style="flex:1;">${prog(hrs,maxH,i===0?'var(--green)':'var(--borderL)')}</div>
+      <div style="font-size:13px;font-weight:${i===0?600:400};color:${i===0?'var(--green)':'var(--textM)'};">${fmt(hrs)}h</div>
+      ${i===0?'<span class="badge badge-green" style="font-size:9px;">Leads</span>':'<div style="width:48px;"></div>'}
+    </div>`;
+  }).join('');
+
+  document.getElementById('main').innerHTML=`<div class="page">
+    <div class="ph">
+      <div><div class="ph-title">Participants</div><div class="ph-sub">§469(c)(7)(C) — Tracked separately</div></div>
+      <button class="btn btn-primary btn-sm" onclick="addPart()" style="flex-shrink:0;">+ Add</button>
+    </div>
+
+    <div class="callout callout-amber">
+      <span class="ci">⚠</span>
+      <div><div class="ct">§469(c)(7)(C) — Joint Return Rule</div>
+      <div class="cb">Only ONE spouse can qualify for REPS. Their hours cannot be combined. For STR Test 3, your hours must exceed every other individual — including paid managers.</div></div>
+    </div>
+
+    ${S.parts.length===0?`<div class="empty"><div class="empty-icon">◉</div><div class="empty-title">No participants yet</div><div class="empty-sub">Add yourself as the primary filer first.</div><button class="btn btn-primary btn-full" onclick="addPart()">+ Add Yourself</button></div>`:cards}
+
+    ${S.parts.length>1?`<div class="card" style="margin-bottom:10px;">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Hours Comparison — Test 3</div>
+      <div style="font-size:11px;color:var(--textM);margin-bottom:14px;">Primary filer must exceed every other participant.</div>
+      ${compRows}
+    </div>`:''}
+
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">§469(c)(7)(A) — >50% Profession</div>
+      <div style="font-size:11px;color:var(--textM);margin-bottom:14px;">Enter hours worked in other professions (W2 job, other businesses) to calculate your ratio.</div>
+      <div class="field"><label class="lbl">Other Profession Hours This Year</label>
+        <input class="inp" type="number" id="oph" value="${S.otherProfHours}" placeholder="e.g. 1800 hrs W2 job" inputmode="numeric" oninput="S.otherProfHours=parseFloat(this.value)||0;updateStatus();">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:12px;color:var(--textM);">Real estate % of all work</div>
+        <div style="font-size:22px;font-weight:700;color:${pp>50?'var(--green)':'var(--amber)'};">${pp}% ${pp>50?'✓':''}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function addPart(){
+  const rOpts=['Primary Investor','Co-Owner / Spouse','Property Manager','Contractor','Bookkeeper','Other'].map(r=>`<option>${r}</option>`).join('');
+  openModal(`<div class="mh"><h3>Add Participant</h3><button class="mh-close" onclick="closeModal()">✕</button></div>
+    <div class="mb">
+      <div class="field"><label class="lbl">Full Name <span class="req">*</span></label><input class="inp" id="prtn" placeholder="Your full name"></div>
+      <div class="field"><label class="lbl">Role</label><select class="inp" id="prtr"><option value="">Select…</option>${rOpts}</select></div>
+      <div class="check-row" style="margin-bottom:12px;"><input type="checkbox" id="prtm"><label for="prtm">Primary filer — must meet §469(c)(7)(B) 750-hr REPS test</label></div>
+      <div class="check-row" style="margin-bottom:12px;"><input type="checkbox" id="prts"><label for="prts">Spouse — §469(c)(7)(C): hours tracked separately, cannot be combined</label></div>
+      <div class="field"><label class="lbl">Notes</label><textarea class="inp" id="prtx" rows="2" placeholder="Role details…"></textarea></div>
+      <div class="mf"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="savePart(null)">Add</button></div>
+    </div>`);
+}
+function editPart(id){
+  const p=gpart(id);
+  const rOpts=['Primary Investor','Co-Owner / Spouse','Property Manager','Contractor','Bookkeeper','Other'].map(r=>`<option ${p.role===r?'selected':''}>${r}</option>`).join('');
+  openModal(`<div class="mh"><h3>Edit Participant</h3><button class="mh-close" onclick="closeModal()">✕</button></div>
+    <div class="mb">
+      <div class="field"><label class="lbl">Full Name <span class="req">*</span></label><input class="inp" id="prtn" value="${p.name}"></div>
+      <div class="field"><label class="lbl">Role</label><select class="inp" id="prtr"><option value="">Select…</option>${rOpts}</select></div>
+      <div class="field"><label class="lbl">Notes</label><textarea class="inp" id="prtx" rows="2">${p.notes||''}</textarea></div>
+      <div class="mf"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="savePart(${id})">Save</button></div>
+    </div>`);
+}
+function savePart(id){
+  const name=document.getElementById('prtn').value.trim();
+  if(!name){toast('Name required','err');return;}
+  if(!id){
+    const isMain=document.getElementById('prtm').checked,isSpouse=document.getElementById('prts').checked;
+    if(isMain&&S.parts.some(p=>p.main)){toast('Only one primary filer — §469(c)(7)(C)','err');return;}
+    S.parts.push({id:S.nextId++,name,role:document.getElementById('prtr').value,main:isMain,spouse:isSpouse,notes:document.getElementById('prtx').value,active:true});
+  } else {
+    S.parts=S.parts.map(p=>p.id===id?{...p,name:document.getElementById('prtn').value.trim(),role:document.getElementById('prtr').value,notes:document.getElementById('prtx').value}:p);
+  }
+  closeModal();save();toast(id?'Updated ✓':'Participant added ✓','ok');pgParts();
+}
+function delPart(id){S.parts=S.parts.filter(p=>p.id!==id);save();toast('Removed','ok');pgParts();}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MATERIAL PARTICIPATION TESTS
+// ══════════════════════════════════════════════════════════════════════════════
+function pgTests(){
+  const pr=S.parts.find(p=>p.main);
+  const prH=pr?S.entries.filter(e=>e.partId===pr.id).reduce((s,e)=>s+e.dur,0):0;
+  const maxO=Math.max(0,...S.parts.filter(p=>!p.main).map(p=>S.entries.filter(e=>e.partId===p.id).reduce((s,e)=>s+e.dur,0)));
+  const allSPA=S.props.reduce((s,p)=>{const h=propHours(p.id,pr?.id);return s+(h>=100?h:0);},0);
+
+  const testMet=n=>{switch(n){case 1:return prH>500;case 2:return prH>0&&maxO===0;case 3:return prH>=100&&prH>maxO;case 4:return prH>=100&&allSPA>500;case 5:case 6:return false;case 7:return prH>=100;default:return false;}};
+
+  document.getElementById('main').innerHTML=`<div class="page">
+    <div class="ph"><div><div class="ph-title">Material Participation</div><div class="ph-sub">Reg §1.469-5T — Must satisfy at least one test</div></div></div>
+    <div style="font-size:13px;color:var(--textM);margin-bottom:16px;">Primary filer: <strong style="color:var(--text);">${pr?pr.name:'Not set'}</strong> · ${fmt(prH)} hrs</div>
+
+    ${MP_TESTS.map(t=>{
+      const met=testMet(t.n),close=!met&&t.thresh&&prH>=(t.thresh*.6);
+      return `<div class="test-card ${met?'test-met':close?'test-close':''}">
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:30px;height:30px;border-radius:50%;background:${met?'rgba(16,185,129,.2)':'var(--border)'};border:1.5px solid ${met?'var(--green)':'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${met?'var(--green)':'var(--textD)'};flex-shrink:0;">${t.n}</div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+              <div style="font-size:14px;font-weight:600;color:var(--text);">${t.name}</div>
+              ${met?'<span class="badge badge-green" style="font-size:9px;">✓ Met</span>':close?`<span class="badge badge-amber" style="font-size:9px;">Close</span>`:`<span class="badge" style="font-size:9px;background:var(--surfaceL);color:var(--textD);">Not Met</span>`}
+            </div>
+            <div style="font-size:12px;color:var(--textM);margin-bottom:3px;">${t.desc}</div>
+            <div class="irc">${t.irc}</div>
+            ${t.n===1?`<div style="margin-top:8px;">${prog(prH,500,'var(--green)')}<div style="font-size:10px;color:var(--textD);margin-top:3px;">${fmt(prH)} / 500 hours</div></div>`:''}
+            ${t.n===3?`<div style="font-size:12px;color:var(--textM);margin-top:6px;">Your: <strong style="color:var(--text);">${fmt(prH)}</strong> · Others max: <strong style="color:var(--text);">${fmt(maxO)}</strong> · ${prH>maxO?'<span style="color:var(--green);">✓ You lead</span>':`<span style="color:var(--amber);">Need &gt;${fmt(maxO)}</span>`}</div>`:''}
+            ${t.n===5||t.n===6?`<div class="callout callout-amber" style="margin-top:8px;padding:8px 12px;"><div class="cb" style="font-size:11px;">Requires prior-year history — confirm with your CPA.</div></div>`:''}
+          </div>
+        </div>
+      </div>`;
+    }).join('')}
+
+    <div class="section-title">§469(c)(7) REPS Tests — Both Must Be Met</div>
+    <div class="test-card ${repsHours()>=750?'test-met':''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div><div style="font-size:13px;font-weight:600;color:var(--text);">§469(c)(7)(B) — 750-Hour Test</div><div class="irc">Hard floor — Bailey v. Comm'r</div></div>
+        <div style="font-size:20px;font-weight:700;color:${repsHours()>=750?'var(--green)':'var(--text)'};">${fmt(repsHours())}<span style="font-size:11px;color:var(--textD);">/750</span></div>
+      </div>
+    </div>
+    <div class="test-card ${profPct()>50?'test-met':''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div><div style="font-size:13px;font-weight:600;color:var(--text);">§469(c)(7)(A) — >50% Profession</div><div class="irc">Set other-profession hours on Participants page</div></div>
+        <div style="font-size:20px;font-weight:700;color:${profPct()>50?'var(--green)':'var(--amber)'};">${profPct()}%</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// AUDIT DEFENSE
+// ══════════════════════════════════════════════════════════════════════════════
+function pgAudit(){
+  const rH=repsHours(),pp=profPct();
+  const q750=rH>=750,qPct=pp>50,qFull=q750&&qPct;
+  const checks=[
+    {ok:S.parts.some(p=>p.main),l:'Primary filer designated',d:'Required for §469(c)(7) tracking',ref:'§469(c)(7)(C)'},
+    {ok:S.props.filter(p=>p.active).length>0,l:'Active properties added',d:'All rental interests documented',ref:'§469(c)(7)(B)'},
+    {ok:S.entries.length>0,l:'Time entries logged',d:'Contemporaneous records required',ref:'Reg §1.469-5T(f)(4)'},
+    {ok:S.entries.length>0&&S.entries.every(e=>e.ts),l:'All entries timestamped',d:'Proves contemporaneous — Moss v. Comm\'r',ref:'T.C. Memo 2012-97'},
+    {ok:S.entries.length>0&&S.entries.every(e=>e.desc&&e.desc.length>10),l:'Detailed descriptions (10+ chars)',d:'Vague descriptions rejected — Birdsong v. Comm\'r',ref:'T.C. Memo 2018-148'},
+    {ok:q750,l:`750-hr test met (${fmt(rH)} hrs)`,d:'Hard floor — no approximation accepted',ref:'§469(c)(7)(B)'},
+    {ok:qPct,l:`>50% profession met (${pp}%)`,d:'Enter other hours on Participants page',ref:'§469(c)(7)(A)'},
+    {ok:S.aggElect,l:'Aggregation election recorded',d:'Must be on timely filed return — Harnett v. Comm\'r',ref:'§1.469-9(e)(1)'},
+    {ok:S.miles.length>0,l:'Mileage log maintained',d:'§274(d) — travel counts toward REPS hours',ref:'Tobin v. Comm\'r'},
+  ];
+  const passed=checks.filter(c=>c.ok).length,score=Math.round(passed/checks.length*100);
+
+  document.getElementById('main').innerHTML=`<div class="page">
+    <div class="ph"><div><div class="ph-title">Audit Defense</div><div class="ph-sub">§469(c)(7) + Reg §1.469-5T(f)(4)</div></div></div>
+
+    <div class="g2" style="margin-bottom:14px;">
+      <div class="scard" style="border-top:3px solid ${qFull?'var(--green)':'var(--amber)'};">
+        <div style="font-size:11px;color:var(--textM);margin-bottom:4px;">Qualification</div>
+        <div style="font-size:18px;font-weight:700;color:${qFull?'var(--green)':'var(--amber)'};">${qFull?'✓ Qualifies':'In Progress'}</div>
+        <div style="font-size:10px;color:var(--textM);margin-top:4px;">750hr: ${q750?'✓':'⚠'} · >50%: ${qPct?'✓':'⚠'}</div>
+      </div>
+      <div class="scard" style="border-top:3px solid ${score>=80?'var(--green)':score>=60?'var(--amber)':'var(--red)'};">
+        <div style="font-size:11px;color:var(--textM);margin-bottom:4px;">Audit Readiness</div>
+        <div style="font-size:18px;font-weight:700;color:${score>=80?'var(--green)':score>=60?'var(--amber)':'var(--red)'};">${score}%</div>
+        <div style="margin-top:6px;">${prog(score,100,score>=80?'var(--green)':score>=60?'var(--amber)':'var(--red)')}</div>
+        <div style="font-size:10px;color:var(--textM);margin-top:4px;">${passed}/${checks.length} checks</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;">Documentation Checklist</div>
+      ${checks.map(c=>`<div style="display:flex;align-items:flex-start;gap:11px;padding:10px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:16px;flex-shrink:0;">${c.ok?'✅':'⚠️'}</span>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:var(--text);">${c.l}</div>
+        <div style="font-size:11px;color:var(--textM);margin-top:2px;">${c.d}</div>
+        <div class="irc" style="margin-top:1px;">${c.ref}</div></div>
+      </div>`).join('')}
+    </div>
+
+    <div class="card" style="margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;">Key Case Law</div>
+      ${[
+        ['Moss v. Comm\'r (2012)','Reconstructed logs rejected'],
+        ['Birdsong v. Comm\'r (2018)','Vague descriptions rejected'],
+        ['Tobin v. Comm\'r (2013)','Travel time counts toward REPS'],
+        ['Bailey v. Comm\'r (2001)','750 hrs is hard floor'],
+        ['Gragg v. U.S. (2011)','Daily logs viewed favorably'],
+        ['Harnett v. Comm\'r (2020)','Aggregation must be on return'],
+        ['Aragona v. Comm\'r (2019)','Digital logs with detail accepted'],
+      ].map(([c,h])=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);">
+        <div style="font-size:12px;font-weight:600;color:var(--blueL);">${c}</div>
+        <div style="font-size:12px;color:var(--textM);">${h}</div>
+      </div>`).join('')}
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="btn btn-primary btn-full" onclick="exportCSV()">↓ Export IRS Audit Log (CSV)</button>
+      <button class="btn btn-green btn-full" onclick="toast('PDF audit package in full version','info')">↓ Export Audit Package (PDF)</button>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// YEAR ARCHIVES
+// ══════════════════════════════════════════════════════════════════════════════
+function pgArchives(){
+  const arcs=[...S.archives].sort((a,b)=>b.year-a.year);
+
+  const cards=arcs.map(a=>{
+    const qualified=a.q750&&a.qPct;
+    const catT={};(a.entries||[]).forEach(e=>{catT[e.act]=(catT[e.act]||0)+e.dur;});
+    const topCats=Object.entries(catT).sort((x,y)=>y[1]-x[1]).slice(0,3);
+    return `<div class="card" style="margin-bottom:12px;border-top:3px solid ${qualified?'var(--green)':a.repsHours>=500?'var(--amber)':'var(--border)'};">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-family:'DM Serif Display',serif;font-size:26px;color:var(--text);">${a.year}</div>
+          <div style="font-size:11px;color:var(--textD);">Archived ${new Date(a.archivedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span class="badge badge-${qualified?'green':a.repsHours>=500?'amber':'red'}">${qualified?'✓ REPS Qualified':a.repsHours>=500?'Partial':'Not Qualified'}</span>
+          <button class="btn btn-xs btn-ghost" onclick="exportArc(${a.year})">↓ CSV</button>
+        </div>
+      </div>
+
+      <div class="g4" style="margin-bottom:12px;">
+        ${[
+          {l:'Total Hours',v:parseFloat(a.totalHours||0).toFixed(1),c:a.q750?'var(--green)':'var(--amber)'},
+          {l:'REPS Hours',v:parseFloat(a.repsHours||0).toFixed(1),c:a.q750?'var(--green)':'var(--amber)'},
+          {l:'Profession %',v:(a.profPct||0)+'%',c:a.qPct?'var(--green)':'var(--amber)'},
+          {l:'Mileage',v:fmtC((a.totalMiles||0)*MR),c:'var(--amber)'},
+        ].map(s=>`<div class="scard" style="border-top:2px solid ${s.c};">
+          <div style="font-size:15px;font-weight:700;color:var(--text);">${s.v}</div>
+          <div style="font-size:10px;color:var(--textM);margin-top:1px;">${s.l}</div>
+        </div>`).join('')}
+      </div>
+
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <div style="font-size:11px;color:${a.q750?'var(--green)':'var(--amber)'};">${a.q750?'✓':'○'} 750-hr</div>
+        <div style="font-size:11px;color:var(--textD);">·</div>
+        <div style="font-size:11px;color:${a.qPct?'var(--green)':'var(--amber)'};">${a.qPct?'✓':'○'} >50% profession</div>
+        <div style="font-size:11px;color:var(--textD);">·</div>
+        <div style="font-size:11px;color:var(--textD);">${a.entryCount||0} entries · ${a.mileTrips||0} trips</div>
+      </div>
+
+      ${topCats.length?`<div style="border-top:1px solid var(--border);padding-top:10px;">
+        <div style="font-size:10px;font-weight:700;color:var(--textD);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Top Activities</div>
+        ${topCats.map(([n,h])=>`<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--textM);margin-bottom:3px;"><span>${n}</span><strong style="color:var(--text);">${parseFloat(h).toFixed(1)}h</strong></div>`).join('')}
+      </div>`:''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('main').innerHTML=`<div class="page">
+    <div class="ph"><div><div class="ph-title">Year Archives</div><div class="ph-sub">Auto-saved every January 1st — full IRS documentation per year</div></div></div>
+
+    <div class="callout callout-blue" style="margin-bottom:16px;">
+      <span class="ci">ℹ</span>
+      <div><div class="ct">How Archives Work</div>
+      <div class="cb">On January 1st the app automatically snapshots all hours, mileage, entries, and REPS qualification status for the prior year, then resets to zero. Properties and participants carry forward. Export any year as CSV for your CPA.</div></div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <div style="font-size:13px;color:var(--textM);">${arcs.length} year${arcs.length!==1?'s':''} archived</div>
+      ${(S.entries.length||S.miles.length)?`<button class="btn btn-xs btn-amber" onclick="manualArc()">Archive ${YEAR} Now</button>`:''}
+    </div>
+
+    ${arcs.length===0?`<div class="empty">
+      <div class="empty-icon">🗂</div>
+      <div class="empty-title">No archives yet</div>
+      <div class="empty-sub">Your first archive is created automatically on January 1st, ${YEAR+1}. Keep logging and the app handles the rest.</div>
+    </div>`:cards}
+  </div>`;
+}
+
+function manualArc(){
+  if(!S.entries.length&&!S.miles.length){toast('No data to archive','err');return;}
+  const rH=repsHours(),pp=profPct();
+  const arc={
+    year:YEAR,archivedAt:new Date().toISOString(),
+    entries:[...S.entries],miles:[...S.miles],
+    props:[...S.props],parts:S.parts.map(p=>({...p})),
+    totalHours:S.entries.reduce((s,e)=>s+e.dur,0),
+    totalMiles:S.miles.reduce((s,m)=>s+m.miles,0),
+    repsHours:rH,profPct:pp,q750:rH>=750,qPct:pp>50,
+    entryCount:S.entries.length,mileTrips:S.miles.length,
+  };
+  S.archives=[arc,...S.archives.filter(a=>a.year!==YEAR)].slice(0,10);
+  save();toast(YEAR+' archived ✓','ok');pgArchives();
+}
+
+function exportArc(year){
+  const a=S.archives.find(x=>x.year===year);
+  if(!a){toast('Archive not found','err');return;}
+  const pM={};(a.props||[]).forEach(p=>pM[p.id]=p);
+  const ptM={};(a.parts||[]).forEach(p=>ptM[p.id]=p);
+  const hdr='Date,Hours,Activity Type,Description,Property,Address,Type,Participant,Notes,Timestamp\n';
+  const rows=(a.entries||[]).map(e=>{const p=pM[e.propId],pt=ptM[e.partId];return[e.date,e.dur,e.act,`"${(e.desc||'').replace(/"/g,'""')}"`,p?p.name:'',p?p.address||'':'',p?p.type:'',pt?pt.name:'',`"${(e.notes||'').replace(/"/g,'""')}"`,e.ts||''].join(',');}).join('\n');
+  const mHdr='\n\nMILEAGE\nDate,Miles,From,Property,Purpose\n';
+  const mRows=(a.miles||[]).map(m=>{const p=pM[m.propId];return[m.date,m.miles,m.from,p?p.name:'',m.purpose].join(',');}).join('\n');
+  const blob=new Blob([hdr+rows+mHdr+mRows],{type:'text/csv'});
+  const el=document.createElement('a');el.href=URL.createObjectURL(blob);el.download=`REPS_${year}_Archive.csv`;el.click();
+  toast(year+' exported ✓','ok');
+}
+
+// ── BOOT ─────────────────────────────────────────────────────────────────────
+load();
+checkRollover();
+const yr=YEAR+' Tax Year';
+['desk-year','mob-year'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=yr;});
+// On desktop show sidebar, hide topbar/bottomnav via CSS media query
+render();
+</script>
+</body>
+</html>
